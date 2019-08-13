@@ -1,0 +1,250 @@
+
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>Insert title here</title>
+
+    <script src="../js/jquery-1.8.0.js"></script>
+    <link rel="stylesheet" type="text/css" href="../js/easyui-1.7.0/themes/default/easyui.css">
+    <link rel="stylesheet" type="text/css" href="../js/easyui-1.7.0/themes/icon.css">
+    <link rel="stylesheet" type="text/css" href="../js/easyui-1.7.0/demo.css">
+    <script type="text/javascript" src="../js/easyui-1.7.0/jquery.min.js"></script>
+    <script type="text/javascript" src="../js/easyui-1.7.0/jquery.easyui.min.js"></script>
+    <script type="text/javascript" src="../js/easyui-1.7.0/plugins/jquery.datagrid.js"></script>
+    <script type="text/javascript" src="../js/myEsyui.js"></script>
+
+
+
+</head>
+<body>
+
+
+<form action="../music/importExcel" method="post" enctype="multipart/form-data" >
+    <input type="file" name="file"/>
+    <input type="submit" value="导入excel"/>
+</form>
+
+<input type="button" value="导出Excel" onclick="exportExcel()">
+
+
+
+<table id="data" title="信息" class="easyui-datagrid" toolbar="#ToolBar" fit='true' >
+
+</table>
+
+<div id="ToolBar">
+    <a href="javaScript:addUser()" class="easyui-linkbutton" data-options="iconCls:'icon-add'">添加</a>
+    <a href="javascript:ModifyBySelect()" class="easyui-linkbutton" data-options="iconCls:'icon-edit'">修改</a>
+    <a href="javascript:delDialog()" class="easyui-linkbutton" data-options="iconCls:'icon-cancel'">删除</a>
+    用户名:<input type="text" id="che" >
+    <a href="javascript:queryM()" class="easyui-linkbutton"iconCls="icon-search" plain="true">查询</a>
+
+
+
+
+</div>
+
+
+<div id="AddDialog" class="easyui-dialog" buttons="#AddDialogButtons" style="width: 320px; height: 270px;" closed="true">
+    <form id="addForm">
+        <input type="hidden" name="id">
+        <table>
+            <tr>
+                <td>用户名</td>
+                <td><input type="text" name="username" class="easyui-validatebox" required=true></td>
+            </tr>
+            <tr>
+                <td>密码</td>
+                <td><input type="text" name="password"  class="easyui-validatebox" required=true></td>
+            </tr>
+        </table>
+    </form>
+
+
+</div>
+<div id="AddDialogButtons">
+    <a href="javascript:SaveDialog()" class="easyui-linkbutton"iconCls="icon-ok">保存</a>
+    <a href="javascript:CloseDialog()" class="easyui-linkbutton" iconCls="icon-cancel">取消</a>
+</div>
+
+
+
+
+
+<!-- dialog 对话框 -->
+<div id="updl"  class="easyui-dialog" title="菜单" style="width:400px;height:300px;"
+     data-options="iconCls:'icon-save',resizable:true,modal:true">
+    <!-- 下拉树  -->
+    <ul id="et" class="easyui-tree">
+    </ul>
+    <input type="button" value="提交" onclick="updateUser()" >
+</div>
+<!-- dialog 回显对话框结束 -->
+
+</body>
+<script type="text/javascript">
+
+    $(function(){
+        $("#updl").dialog("close");
+
+    });
+    function exportExcel() {
+        location.href="../music/exportExce";
+    }
+
+    $(function(){
+        $("body").css({visibility:"visible"});
+        $("#data").datagrid({
+
+            url:"../music/queryUserList",
+            columns:[
+                [
+                {field:'cb',checkbox:true},
+                {field:'id',title:'Id',width:100},
+                {field:'username',title:'名称',width:100},
+                {field:'password',title:'密码',width:100},
+                {field:'cz',title:'操作',
+                    formatter: function(value,row,index){
+
+                        var content = "<a href='javascript:deleteAll("+row.id+")' class='easyui-linkbutton' iconCls:'icon-cancel'>删除</a>";
+                        content += " |   <a href='javascript:ModifyBySelect("+row.id+")' class='easyui-linkbutton' iconCls='icon-search'>更改</a>";
+                        content +=  " |    <a href='javascript:bindRole("+row.id+")' class='easyui-linkbutton' iconCls:'icon-cancel'>绑定角色</a>";
+                        return content;
+                    },width:$(this).width() * 0.2
+                }
+
+            ]
+            ],
+            pagination:true,
+            pageList:[2,5,10],
+            rownumbers:true,
+            fit:true,
+            fitColumns:true
+        })
+
+    })
+
+
+    //删除
+    function delDialog(){
+        //获取数据
+        var rows=$("#data").datagrid('getSelections');
+        if(rows.length==0){
+
+            $.messager.alert("提示信息","请至少选择一条数据！！");
+            return ;
+        }
+
+        var Arr=[];
+
+        for(var i=0;i<rows.length;i++){
+            Arr.push(rows[i].id);
+
+        }
+        var ids=Arr.join(",");
+
+        location.href="<%=request.getContextPath()%>/user/delUser.do?ids="+ids;
+
+    }
+
+
+    var uidTwo ;
+    function bindRole(id){
+        uidTwo = id;
+        $("#updl").dialog("open");
+
+        $('#et').tree({
+            url:'../music/getUserById?id='+id,
+            checkbox: true,
+            // 去掉 父子节点 级联
+            cascadeCheck:false,
+        });
+
+
+    }
+
+    function updateUser(){
+        var id = uidTwo;
+        var ids = getchecked();
+        $.ajax({
+            url:'../music/updateUserBy',
+            data:{ids:ids,id:id},
+            type:"post",
+            success:function(data){
+                if(data=='1'){
+                    $("#updl").dialog("close");
+                }else{
+                    alert("错了")
+                }
+            }
+
+        })
+    }
+
+    function getchecked(){
+        var nodes = $('#et').tree('getChecked');
+        var s = '';
+        for(var i=0; i<nodes.length; i++){
+            if (s != '') s += ',';
+            s += nodes[i].id;
+        }
+        return s;
+    }
+
+
+    //打开
+    function addUser(){
+        $("#AddDialog").dialog('open').dialog('setTitle',"添加数据");
+
+    }
+    //关闭
+
+    function CloseDialog(){
+
+        $("#AddDialog").dialog('close')
+    }
+    //添加
+    function SaveDialog(){
+
+        $('#addForm').form('submit', {
+            url: '<%=request.getContextPath() %>/user/addUser.do',
+            success: function(){
+                $("#AddDialog").dialog('close');
+                //刷新表格数据
+                $("#data").datagrid('reload');
+            }
+        });
+    }
+
+
+    //修改
+    function ModifyBySelect(){
+        //获取要修改的数据 返回的是一个
+        var rows=$("#data").datagrid('getSelections');
+        if(1 !=rows.length){
+            $.messager.alert("系统提示","请选择一条数据进行编辑！");
+            return ;
+        }
+
+        //打开窗口
+        $("#AddDialog").dialog('open').dialog('setTitle','修改数据');
+        //获取数据
+        var selData=$("#data").datagrid('getSelected');
+        $("#addForm").form('load',selData);
+
+        url="<%=request.getContextPath()%>/user/addUser.do?id="+selData.id;
+
+    }
+
+
+    function queryM(){
+        //获取input的值
+        $("#data").datagrid('load',{
+            username:$("#che").val(),
+
+        })
+    }
+
+
+</script>
+</html>

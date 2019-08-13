@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Title</title>
+    <script type="text/javascript" src="../js/jquery.min.js"></script>
+</head>
+<body>
+<table border="1">
+    <tr>
+        <td>ID</td>
+        <td>书名</td>
+        <td>价格</td>
+        <td>类型</td>
+        <td>作者</td>
+    </tr>
+    <tr th:each="book:${list}">
+        <td th:text="${book.id}">id</td>
+        <td th:text="${book.name}">name</td>
+        <td th:text="${book.price}">date</td>
+        <td th:text="${book.bookType}">type</td>
+        <td th:text="${book.author}">url</td>
+    </tr>
+</table>
+</body>
+<script>
+
+    $(function(){
+        $.ajax({
+            url:"../book/query",
+            type:"get",
+            dataType:"json",
+            success:function (data) {
+                alert(data);
+            }
+        })
+    })
+
+
+
+
+</script>
+</html>

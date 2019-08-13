@@ -1,0 +1,183 @@
+
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>Insert title here</title>
+
+
+    <script src="../js/jquery-1.8.0.js"></script>
+    <link rel="stylesheet" type="text/css" href="../js/easyui-1.7.0/themes/default/easyui.css">
+    <link rel="stylesheet" type="text/css" href="../js/easyui-1.7.0/themes/icon.css">
+    <link rel="stylesheet" type="text/css" href="../js/easyui-1.7.0/demo.css">
+    <script type="text/javascript" src="../js/easyui-1.7.0/jquery.min.js"></script>
+    <script type="text/javascript" src="../js/easyui-1.7.0/jquery.easyui.min.js"></script>
+    <script type="text/javascript" src="../js/easyui-1.7.0/plugins/jquery.datagrid.js"></script>
+    <script type="text/javascript" src="../js/myEsyui.js"></script>
+
+
+</head>
+<body>
+
+<table id="data" title="信息" class="easyui-datagrid" fit='true' toolbar="#ToolBar" >
+
+</table>
+
+<div id="ToolBar">
+    <a href="javaScript:addRole()" class="easyui-linkbutton" data-options="iconCls:'icon-add'">添加</a>
+    <a href="javascript:ModifyBySelect()" class="easyui-linkbutton" data-options="iconCls:'icon-edit'">修改</a>
+    <a href="javascript:delDialog()" class="easyui-linkbutton" data-options="iconCls:'icon-cancel'">删除</a>
+</div>
+
+
+<div id="AddDialog" class="easyui-dialog" buttons="#AddDialogButtons" style="width: 320px; height: 270px;" closed="true">
+    <form id="addForm">
+        <table>
+            <tr>
+                <td>姓名</td>
+                <td><input type="text" name="name" class="easyui-validatebox" required=true></td>
+            </tr>
+            <tr>
+                <td>简介</td>
+                <td><input type="text" name="description"  class="easyui-validatebox" required=true></td>
+            </tr>
+            <tr>
+                <td>text</td>
+                <td><input type="text" name="text"  class="easyui-validatebox" required=true></td>
+            </tr>
+        </table>
+    </form>
+
+
+</div>
+<div id="AddDialogButtons">
+    <a href="javascript:SaveDialog()" class="easyui-linkbutton"iconCls="icon-ok">保存</a>
+    <a href="javascript:CloseDialog()" class="easyui-linkbutton" iconCls="icon-cancel">取消</a>
+</div>
+
+
+
+
+<!-- dialog 对话框 -->
+<div id="updl"  class="easyui-dialog" title="菜单" style="width:400px;height:300px;"
+     data-options="iconCls:'icon-save',resizable:true,modal:true">
+    <!-- 下拉树  -->
+    <ul id="et" class="easyui-tree">
+    </ul>
+    <input type="button" value="提交" onclick="updateTree()" >
+</div>
+<!-- dialog 回显对话框结束 -->
+
+
+</body>
+<script type="text/javascript">
+
+    $(function(){
+        $("#updl").dialog("close");
+
+    });
+
+
+    $(function(){
+        $("body").css({visibility:"visible"});
+        $("#data").datagrid({
+
+            url:"../music/queryroleList",
+            columns:[
+                [
+                {field:'cb',checkbox:true},
+                {field:'id',title:'Id',width:100},
+                {field:'name',title:'名称',width:100},
+                {field:'description',title:'简介',width:100},
+                {field:'cz',title:'操作',
+                    formatter: function(value,row,index){
+
+                        var content = "<a href='javascript:deleteAll("+row.id+")' class='easyui-linkbutton' iconCls:'icon-cancel'>删除</a>";
+                        content += " |   <a href='javascript:ModifyBySelect("+row.id+")' class='easyui-linkbutton' iconCls='icon-search'>更改</a>";
+                        content += "|   <a href='javascript:editRolePermiss("+row.id+")' class='easyui-linkbutton' iconCls:'icon-cancel'>绑定菜单</a>"
+                        return content;
+                    },width:$(this).width() * 0.2
+                }
+
+            ]
+            ],
+            pagination:true,
+            pageList:[2,5,10],
+            rownumbers:true,
+            fit:true,
+            fitColumns:true
+        })
+
+    })
+    var roles;
+    function editRolePermiss(id){
+        roles=id;
+        $("#updl").dialog("open");
+        $("#et").tree({
+            url:"../music/getTreeById?id="+id,
+            checkbox:true,
+            cascadeCheck:false,
+        });
+
+    }
+
+    function updateTree(){
+        var ids = getChecked();
+        var id= roles;
+        $.ajax({
+            url:"../music/updateTree",
+            data:{ids:ids,id:id},
+            type:"post",
+            success:function(data){
+                if(data=='1'){
+                    $("#updl").dialog("close");
+                }else{
+                    alert("不对吧")
+                }
+            }
+
+        })
+
+    }
+
+    function getChecked(){
+        var nodes = $('#et').tree('getChecked');
+        var s ='';
+        for(var i=0; i<nodes.length ; i++){
+            if(s !='')
+                s+=',';
+            s+=nodes[i].id
+        }
+        return s;
+    }
+
+
+
+    //打开
+    function addRole(){
+        $("#AddDialog").dialog('open').dialog('setTitle',"添加数据");
+
+    }
+    //关闭
+
+    function CloseDialog(){
+
+        $("#AddDialog").dialog('close')
+    }
+    //添加
+    function SaveDialog(){
+
+        $('#addForm').form('submit', {
+            url: '<%=request.getContextPath() %>/user/addRole.do',
+            success: function(){
+                $("#AddDialog").dialog('close');
+                //刷新表格数据
+                $("#data").datagrid('reload');
+            }
+        });
+    }
+
+
+
+
+</script>
+</html>
